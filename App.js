@@ -1,0 +1,232 @@
+import React, { useState, useEffect } from 'react';
+
+const gameData = [
+  {
+    headline: 'Major earthquake shakes the Pacific coast, triggering tsunami warnings.',
+    correctTranslation: '🌊⚡️🚨🚸',
+    emojiPalette: ['🌊', '⚡️', '🚨', '🚸', '⚠️', '🏠', '💔', '😔', '🗺️'],
+    explanation: 'The translation uses a wave (🌊) for the tsunami, a lightning bolt (⚡️) for the earthquake, a siren (🚨) for the warning, and a warning sign (🚸) for the alert.'
+  },
+  {
+    headline: 'Giant panda cub born at the zoo, the first in over a decade.',
+    correctTranslation: '🐼👶🎉🆕📅',
+    emojiPalette: ['🐼', '👶', '🎉', '🆕', '🔟', '📅', '🐾', '🥳', '🎈'],
+    explanation: 'This translation highlights the panda (🐼), the cub (👶), the celebration (🎉), its newness (🆕), and the time frame (📅).'
+  },
+  {
+    headline: 'Record-breaking heatwave sweeps across the globe, causing power outages.',
+    correctTranslation: '📈🔥☀️🌍🔌',
+    emojiPalette: ['📈', '🔥', '☀️', '🌡️', '🥵', '🌍', '⚡️', '🔌', '📉'],
+    explanation: 'The translation uses a chart (📈) for the record, fire (🔥) and sun (☀️) for the heatwave, the globe (🌍) for the location, and a plug (🔌) for the power outages.'
+  },
+  {
+    headline: 'Major technology company announces a breakthrough in quantum computing.',
+    correctTranslation: '💻🤯🚀✨',
+    emojiPalette: ['💻', '🤯', '🚀', '✨', '🔬', '💡', '🤖', '💰', '🧑‍💻'],
+    explanation: 'This captures the computer (💻), the mind-blowing nature (🤯), the rocket (🚀) for breakthrough, and the sparkles (✨) for the new technology.'
+  },
+  {
+    headline: 'New study links playing video games to improved problem-solving skills.',
+    correctTranslation: '🎮🧠📈💡',
+    emojiPalette: ['🎮', '🧠', '💡', '📈', '✅', '❓', '🤔', '🏆', '🤓'],
+    explanation: 'This translates the video game (🎮), the brain (🧠) for skills, the chart (📈) for improvement, and a lightbulb (💡) for problem-solving.'
+  },
+  {
+    headline: 'Discovery of a new coral reef ecosystem with vibrant new species.',
+    correctTranslation: '🐠🌊🔎🌈🆕',
+    emojiPalette: ['🐠', '🌊', '🔎', '🌈', '🆕', '🌿', '🌱', '🪸', '✨'],
+    explanation: 'This uses a fish (🐠) and wave (🌊) for the ecosystem, a magnifying glass (🔎) for discovery, a rainbow (🌈) for vibrant, and a new sign (🆕) for the species.'
+  }
+];
+
+// Splash screen component
+const SplashScreen = () => (
+  <div className="flex items-center justify-center min-h-screen bg-blue-500 text-white animate-fade-in">
+    <div className="text-center transform transition-all duration-1000 animate-bounce-slow">
+      <h1 className="text-6xl font-extrabold mb-4 drop-shadow-md">📰</h1>
+      <h2 className="text-4xl font-extrabold tracking-wide text-white">Emoji Newsroom</h2>
+    </div>
+  </div>
+);
+
+const App = () => {
+  const [headlineIndex, setHeadlineIndex] = useState(0);
+  const [userTranslation, setUserTranslation] = useState('');
+  const [score, setScore] = useState(null);
+  const [message, setMessage] = useState('');
+  const [showResult, setShowResult] = useState(false);
+  const [round, setRound] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  // UseEffect for splash screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000); // 3-second splash screen
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { headline, correctTranslation, emojiPalette, explanation } = gameData[headlineIndex];
+
+  const handleEmojiClick = (emoji) => {
+    if (!showResult) {
+      setUserTranslation(prev => prev + emoji);
+    }
+  };
+
+  const handleClear = () => {
+    if (!showResult) {
+      setUserTranslation('');
+    }
+  };
+
+  const handleSubmit = () => {
+    if (userTranslation.trim() === '') {
+      setMessage('Please enter your translation first.');
+      return;
+    }
+    
+    setIsAnimating(true);
+
+    let currentScore = 0;
+    if (userTranslation === correctTranslation) {
+      currentScore = 10;
+      setMessage('Perfect! 10/10!');
+    } else {
+      const correctSet = new Set(correctTranslation.split(''));
+      const userSet = new Set(userTranslation.split(''));
+      let matchedCount = 0;
+      for (const emoji of userSet) {
+        if (correctSet.has(emoji)) {
+          matchedCount++;
+        }
+      }
+      currentScore = Math.round((matchedCount / correctSet.size) * 10);
+      currentScore = Math.min(currentScore, 10); // Ensure score is not over 10
+      setMessage(`Almost! Score: ${currentScore}/10.`);
+    }
+
+    setTimeout(() => {
+      setScore(currentScore);
+      setShowResult(true);
+      setIsAnimating(false);
+    }, 500);
+  };
+
+  const handleNextRound = () => {
+    const nextIndex = (headlineIndex + 1) % gameData.length;
+    setHeadlineIndex(nextIndex);
+    setUserTranslation('');
+    setScore(null);
+    setMessage('');
+    setShowResult(false);
+    setRound(prev => prev + 1);
+  };
+
+  const getEmojiButtonClass = (emoji) => {
+    const isCorrect = showResult && correctTranslation.includes(emoji);
+    const isUserChoice = showResult && userTranslation.includes(emoji);
+
+    if (showResult) {
+      if (isCorrect && isUserChoice) {
+        return 'bg-green-400 hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+      } else if (isCorrect && !isUserChoice) {
+        return 'bg-yellow-400 hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+      } else if (!isCorrect && isUserChoice) {
+        return 'bg-red-400 hover:bg-red-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+      }
+    }
+    return 'bg-white hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+  };
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-yellow-400 p-4 font-sans">
+      <div className="bg-red-500 rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,0.2)] p-6 md:p-10 max-w-lg w-full flex flex-col space-y-6 transform transition-all duration-500">
+        <header className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-extrabold text-white drop-shadow-md">Emoji Newsroom</h1>
+          <div className="text-lg font-bold text-white drop-shadow-md">Round {round}</div>
+        </header>
+
+        <div className="bg-white p-6 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] text-center">
+          <h2 className="text-xl md:text-2xl font-extrabold text-gray-800 leading-relaxed">
+            {headline}
+          </h2>
+        </div>
+
+        <div className="relative">
+          <input
+            type="text"
+            readOnly
+            value={userTranslation}
+            placeholder="Enter your emoji reaction..."
+            className={`w-full p-6 text-xl text-center rounded-2xl border-2 border-black focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] ${isAnimating ? 'animate-pulse' : ''}`}
+            aria-label="Your emoji translation"
+          />
+          {userTranslation && (
+            <button
+              onClick={handleClear}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full text-white bg-red-500 hover:bg-red-600 transition-colors duration-200 shadow-md"
+              aria-label="Clear translation"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-5 md:grid-cols-8 gap-3 mt-6 p-4 bg-blue-500 rounded-2xl shadow-[inset_0px_0px_5px_rgba(0,0,0,0.2)]">
+          {emojiPalette.map((emoji, index) => (
+            <button
+              key={index}
+              onClick={() => handleEmojiClick(emoji)}
+              className={`p-2 w-12 h-12 flex items-center justify-center text-2xl rounded-[1.5rem] transition-all duration-100 transform active:translate-x-1 active:translate-y-1 active:shadow-none ${getEmojiButtonClass(emoji)}`}
+              aria-label={`Select emoji: ${emoji}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        {!showResult && (
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-green-400 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-6 transition-all duration-100 hover:bg-green-500 transform active:translate-x-1 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+          >
+            Submit
+          </button>
+        )}
+
+        {showResult && (
+          <div className="mt-6 flex flex-col space-y-4">
+            <div className="bg-white p-4 rounded-3xl text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+              <h3 className="text-xl font-bold text-gray-800">Your Score: {score}/10</h3>
+              <p className="text-lg mt-2 text-gray-700">{message}</p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+              <h3 className="text-lg font-bold text-gray-800">Correct Translation:</h3>
+              <p className="text-3xl text-center mt-2">{correctTranslation}</p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+              <h3 className="text-lg font-bold text-gray-800">Explanation:</h3>
+              <p className="text-base text-gray-700 mt-2">{explanation}</p>
+            </div>
+            <button
+              onClick={handleNextRound}
+              className="w-full bg-blue-400 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-100 hover:bg-blue-500 transform active:translate-x-1 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+            >
+              Next Round
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default App;

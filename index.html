@@ -14,11 +14,22 @@
     body {
       font-family: 'Inter', sans-serif;
     }
+    /* Styles for the new confetti canvas to ensure it's on top and doesn't interfere with the main content */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none; /* Allows clicks to pass through to the elements below */
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-gray-200 p-4 min-h-screen flex items-center justify-center">
 
   <div id="root"></div>
+  <canvas id="confetti-canvas"></canvas> <!-- This is the new canvas element for the confetti effect -->
 
   <script type="text/babel">
     const { useState, useEffect } = React;
@@ -34,7 +45,7 @@
       {
         headline: 'International space agency successfully launches a new telescope into orbit.',
         correctTranslation: '🚀🔭✨🌌',
-        emojiPalette: ['🚀', '🔭', '✨', '🌌', '🌍', '🛰️', '�', '☄️', '👨‍🚀'],
+        emojiPalette: ['🚀', '🔭', '✨', '🌌', '🌍', '🛰️', '🌠', '☄️', '👨‍🚀'],
         explanation: 'This highlights the rocket launch (🚀), the new telescope (🔭), the sparkles (✨) for the breakthrough, and the galaxy (🌌) for space.'
       },
       {
@@ -46,7 +57,7 @@
       {
         headline: 'New study links rising ocean temperatures to increased marine life migration.',
         correctTranslation: '🌊🔥🐟🚶',
-        emojiPalette: ['🌊', '🔥', '🐟', '🚶', '🌡️', '🐠', '🦈', '🗺️', '🧊'],
+        emojiPalette: ['�', '🔥', '🐟', '🚶', '🌡️', '🐠', '🦈', '🗺️', '🧊'],
         explanation: 'This uses a wave (🌊) and fire (🔥) to represent the hot ocean, a fish (🐟) for marine life, and a walking person (🚶) for migration.'
       },
       {
@@ -125,7 +136,8 @@
       // Effect to handle confetti for high scores
       useEffect(() => {
         if (showResult && score >= 8) {
-          const confettiSettings = { target: 'root', size: 1.5, rotate: true };
+          // This has been updated to target the new confetti canvas
+          const confettiSettings = { target: 'confetti-canvas', size: 1.5, rotate: true };
           const confetti = new ConfettiGenerator(confettiSettings);
           confetti.render();
 

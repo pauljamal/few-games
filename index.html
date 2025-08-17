@@ -102,6 +102,7 @@
             <li>Press "Submit" to see your score.</li>
             <li>The closer your translation is to the correct one, the higher your score!</li>
             <li>Press "Next Round" to continue playing.</li>
+            <li>Use the "RANDOM" button to get a new headline without changing the round.</li>
           </ul>
         </div>
         <button
@@ -205,6 +206,22 @@
         setRound(prev => prev + 1);
       };
 
+      // This new function generates a new random headline without changing the round
+      const handleRandomHeadline = () => {
+        let newIndex;
+        // Use a do-while loop to ensure we get a new headline that is not the current one
+        do {
+          newIndex = Math.floor(Math.random() * gameData.length);
+        } while (newIndex === headlineIndex);
+        
+        setHeadlineIndex(newIndex);
+        setUserTranslation('');
+        setScore(null);
+        setMessage('');
+        setShowResult(false);
+        // Do not update the round count
+      };
+
       const getEmojiButtonClass = (emoji) => {
         const isCorrect = showResult && correctTranslation.includes(emoji);
         const isUserChoice = showResult && userTranslation.includes(emoji);
@@ -300,12 +317,20 @@
                   <h3 className="text-lg font-bold text-gray-800">Explanation:</h3>
                   <p className="text-base text-gray-700 mt-2">{explanation}</p>
                 </div>
-                <button
-                  onClick={handleNextRound}
-                  className="w-full bg-blue-500 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 active:scale-95 shadow-xl"
-                >
-                  Next Round
-                </button>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={handleNextRound}
+                    className="w-full bg-blue-500 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 active:scale-95 shadow-xl"
+                  >
+                    Next Round
+                  </button>
+                  <button
+                    onClick={handleRandomHeadline}
+                    className="w-full bg-gray-400 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-300 hover:bg-gray-500 transform hover:scale-105 active:scale-95 shadow-xl"
+                  >
+                    RANDOM
+                  </button>
+                </div>
               </div>
             )}
           </div>

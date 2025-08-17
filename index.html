@@ -8,14 +8,15 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
     body {
-      font-family: 'Fredoka', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
   </style>
 </head>
-<body class="bg-yellow-400 p-4 min-h-screen flex items-center justify-center">
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 p-4 min-h-screen flex items-center justify-center">
 
   <div id="root"></div>
 
@@ -27,7 +28,7 @@
       {
         headline: 'Major earthquake shakes the Pacific coast, triggering tsunami warnings.',
         correctTranslation: '🌊⚡️🚨🚸',
-        emojiPalette: ['🌊', '⚡️', '🚨', '🚸', '⚠️', '🏠', ' ', '😔', '🗺️'],
+        emojiPalette: ['🌊', '⚡️', '🚨', '🚸', '⚠️', '🏠', '💔', '😔', '🗺️'],
         explanation: 'The translation uses a wave (🌊) for the tsunami, a lightning bolt (⚡️) for the earthquake, a siren (🚨) for the warning, and a warning sign (🚸) for the alert.'
       },
       {
@@ -62,12 +63,42 @@
       }
     ];
 
+    // New game stages to control flow
+    const GAME_STAGES = {
+      SPLASH: 'splash',
+      RULES: 'rules',
+      GAME: 'game'
+    };
+
+    // Splash screen component
     const SplashScreen = () => (
-      <div className="flex items-center justify-center min-h-screen bg-blue-500 text-white animate-fade-in">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 text-white animate-fade-in">
         <div className="text-center transform transition-all duration-1000 animate-bounce-slow">
           <h1 className="text-6xl font-extrabold mb-4 drop-shadow-md">📰</h1>
           <h2 className="text-4xl font-extrabold tracking-wide text-white">Emoji Newsroom</h2>
         </div>
+      </div>
+    );
+
+    // Rules screen component
+    const RulesScreen = ({ onStartGame }) => (
+      <div className="bg-white rounded-3xl shadow-xl p-6 md:p-10 max-w-lg w-full flex flex-col space-y-6 animate-fade-in">
+        <h1 className="text-3xl font-extrabold text-gray-900 text-center">How to Play</h1>
+        <div className="text-lg text-gray-700 space-y-4">
+          <p>Your mission is to translate a news headline into a series of emojis using the palette provided.</p>
+          <ul className="list-disc list-inside space-y-2">
+            <li>Select the emojis you think best represent the headline.</li>
+            <li>Press "Submit" to see your score.</li>
+            <li>The closer your translation is to the correct one, the higher your score!</li>
+            <li>Press "Next Round" to continue playing.</li>
+          </ul>
+        </div>
+        <button
+          onClick={onStartGame}
+          className="w-full bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl text-xl mt-6 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 active:scale-95 shadow-lg"
+        >
+          START!
+        </button>
       </div>
     );
 
@@ -79,14 +110,31 @@
       const [showResult, setShowResult] = useState(false);
       const [round, setRound] = useState(1);
       const [isAnimating, setIsAnimating] = useState(false);
-      const [showSplash, setShowSplash] = useState(true);
+      const [gameStage, setGameStage] = useState(GAME_STAGES.SPLASH);
 
+      // Effect to handle splash screen transition
       useEffect(() => {
-        const timer = setTimeout(() => {
-          setShowSplash(false);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }, []);
+        if (gameStage === GAME_STAGES.SPLASH) {
+          const timer = setTimeout(() => {
+            setGameStage(GAME_STAGES.RULES);
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      }, [gameStage]);
+
+      // Effect to handle confetti for high scores
+      useEffect(() => {
+        if (showResult && score >= 8) {
+          const confettiSettings = { target: 'root', size: 1.5, rotate: true };
+          const confetti = new ConfettiGenerator(confettiSettings);
+          confetti.render();
+
+          // Stop confetti after a few seconds
+          setTimeout(() => {
+            confetti.clear();
+          }, 4000);
+        }
+      }, [showResult, score]);
 
       const { headline, correctTranslation, emojiPalette, explanation } = gameData[headlineIndex];
 
@@ -151,30 +199,33 @@
 
         if (showResult) {
           if (isCorrect && isUserChoice) {
-            return 'bg-green-400 hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+            return 'bg-green-400 hover:bg-green-500 shadow-md';
           } else if (isCorrect && !isUserChoice) {
-            return 'bg-yellow-400 hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+            return 'bg-yellow-400 hover:bg-yellow-500 shadow-md';
           } else if (!isCorrect && isUserChoice) {
-            return 'bg-red-400 hover:bg-red-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+            return 'bg-red-400 hover:bg-red-500 shadow-md';
           }
         }
-        return 'bg-white hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]';
+        return 'bg-gray-100 hover:bg-gray-200 shadow-md';
       };
 
-      if (showSplash) {
+      if (gameStage === GAME_STAGES.SPLASH) {
         return <SplashScreen />;
+      }
+      if (gameStage === GAME_STAGES.RULES) {
+        return <RulesScreen onStartGame={() => setGameStage(GAME_STAGES.GAME)} />;
       }
 
       return (
-        <div className="flex items-center justify-center min-h-screen bg-yellow-400 p-4 font-sans">
-          <div className="bg-red-500 rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,0.2)] p-6 md:p-10 max-w-lg w-full flex flex-col space-y-6 transform transition-all duration-500">
+        <div className="flex items-center justify-center min-h-screen p-4 font-sans">
+          <div className="bg-white rounded-3xl shadow-xl p-6 md:p-10 max-w-lg w-full flex flex-col space-y-6 transform transition-all duration-500">
             <header className="flex justify-between items-center mb-4">
-              <h1 className="text-3xl font-extrabold text-white drop-shadow-md">Emoji Newsroom</h1>
-              <div className="text-lg font-bold text-white drop-shadow-md">Round {round}</div>
+              <h1 className="text-3xl font-bold text-gray-800">Emoji Newsroom</h1>
+              <div className="text-lg font-semibold text-gray-600">Round {round}</div>
             </header>
 
-            <div className="bg-white p-6 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] text-center">
-              <h2 className="text-xl md:text-2xl font-extrabold text-gray-800 leading-relaxed">
+            <div className="bg-gray-100 p-6 rounded-2xl shadow-inner text-center">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-relaxed">
                 {headline}
               </h2>
             </div>
@@ -185,7 +236,7 @@
                 readOnly
                 value={userTranslation}
                 placeholder="Enter your emoji reaction..."
-                className={`w-full p-6 text-xl text-center rounded-2xl border-2 border-black focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] ${isAnimating ? 'animate-pulse' : ''}`}
+                className={`w-full p-6 text-xl text-center rounded-2xl border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 shadow-md ${isAnimating ? 'animate-pulse' : ''}`}
                 aria-label="Your emoji translation"
               />
               {userTranslation && (
@@ -201,12 +252,12 @@
               )}
             </div>
 
-            <div className="grid grid-cols-5 md:grid-cols-8 gap-3 mt-6 p-4 bg-blue-500 rounded-2xl shadow-[inset_0px_0px_5px_rgba(0,0,0,0.2)]">
+            <div className="grid grid-cols-5 md:grid-cols-8 gap-3 mt-6 p-4 bg-gray-50 rounded-2xl shadow-inner">
               {emojiPalette.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => handleEmojiClick(emoji)}
-                  className={`p-2 w-12 h-12 flex items-center justify-center text-2xl rounded-[1.5rem] transition-all duration-100 transform active:translate-x-1 active:translate-y-1 active:shadow-none ${getEmojiButtonClass(emoji)}`}
+                  className={`p-2 w-12 h-12 flex items-center justify-center text-2xl rounded-[1.5rem] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg ${getEmojiButtonClass(emoji)}`}
                   aria-label={`Select emoji: ${emoji}`}
                 >
                   {emoji}
@@ -217,7 +268,7 @@
             {!showResult && (
               <button
                 onClick={handleSubmit}
-                className="w-full bg-green-400 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-6 transition-all duration-100 hover:bg-green-500 transform active:translate-x-1 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+                className="w-full bg-blue-500 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-6 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 active:scale-95 shadow-xl"
               >
                 Submit
               </button>
@@ -225,21 +276,21 @@
 
             {showResult && (
               <div className="mt-6 flex flex-col space-y-4">
-                <div className="bg-white p-4 rounded-3xl text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                <div className="bg-gray-100 p-4 rounded-3xl text-center shadow-md">
                   <h3 className="text-xl font-bold text-gray-800">Your Score: {score}/10</h3>
                   <p className="text-lg mt-2 text-gray-700">{message}</p>
                 </div>
-                <div className="bg-white p-4 rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                <div className="bg-gray-100 p-4 rounded-3xl shadow-md">
                   <h3 className="text-lg font-bold text-gray-800">Correct Translation:</h3>
                   <p className="text-3xl text-center mt-2">{correctTranslation}</p>
                 </div>
-                <div className="bg-white p-4 rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                <div className="bg-gray-100 p-4 rounded-3xl shadow-md">
                   <h3 className="text-lg font-bold text-gray-800">Explanation:</h3>
                   <p className="text-base text-gray-700 mt-2">{explanation}</p>
                 </div>
                 <button
                   onClick={handleNextRound}
-                  className="w-full bg-blue-400 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-100 hover:bg-blue-500 transform active:translate-x-1 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+                  className="w-full bg-blue-500 text-white font-bold py-4 px-6 rounded-3xl text-xl mt-4 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 active:scale-95 shadow-xl"
                 >
                   Next Round
                 </button>
